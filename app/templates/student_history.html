@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+	<link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
+    <title>Attendy</title>
+</head>
+<body>
+	<div class="container" >
+        <!-- Page Heading -->
+		<h1 class="text-center">Attendy</h1>
+		<h4 class="text-center">Technology Firm Leadership, IEOR 171</h4>
+		<p class="text-center">{{ today|date:"F d, Y" }}</p>
+
+
+        <br clear="all">
+		<br clear="all">
+		<br clear="all">
+		<div class="row">
+			<h3 class="text-center"></h3>
+            <table class="table table-centered">
+				<thead>
+					<th></th>
+					<th>Student</th>
+					<th>Status</th>
+					<th>Time</th>
+				</thead>
+				{% for student in results %}
+					<tr>
+						<td>{{forloop.counter}}.</td>
+						<td>{{student.studentID}}</td>
+						<td>{{student.status}}</td>
+						<td>{{student.date}}</td>
+					</tr>
+				{% empty %}
+					<tr>
+						<td colspan="4"> <span class="text-center">You have no attendance history</span></td>
+					</tr>
+				{% endfor %}
+			</table>
+        </div>
+    </div>
+</body>
+</html>

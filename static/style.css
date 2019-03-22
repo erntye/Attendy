@@ -1,0 +1,66 @@
+body {
+  padding-top: 54px;
+}
+
+p{width:100%;}
+.dot {
+  height: 100px;
+  width: 100px;
+  background-color: blue;
+  border-radius: 50%;
+  display: inline-block;
+}
+.cont {
+  position: relative;
+  text-align: center;
+  color: white;
+  font-weight:bold;
+  font-size:24px;
+  width:100%;
+}
+.cont.black{
+    color:black;
+}
+/* Bottom left text */
+.bottom-left {
+  position: absolute;
+  bottom: 8px;
+  left: 16px;
+}
+
+/* Top left text */
+.top-left {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+}
+
+/* Top right text */
+.top-right {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+}
+
+/* Bottom right text */
+.bottom-right {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+}
+
+/* Centered text */
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#step2, #step3, #step4, #step5, .support, .report-link {
+    display:none;
+}
+#error {
+    width:100%;
+    display:none;
+}

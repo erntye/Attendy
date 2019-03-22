@@ -1,0 +1,243 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+	<link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
+    <title>Attendy</title>
+</head>
+<body>
+	<div class="container" >
+
+		<!-- Page Heading -->
+		<h1 class="text-center">Attendy</h1>
+		<h4 class="text-center">Technology Firm Leadership, IEOR 171</h4>
+		<p class="text-center">{{ today|date:"F d, Y" }}</p>
+
+		<br clear="all">
+		<br clear="all">
+		<br clear="all">
+		<div class="row">
+			<div class="alert alert-warning text-center" id="error" role="alert"></div>
+		</div>
+        <div class="row mainrow">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <input class="form-control text-center" id="studentID"  placeholder="Your name" style="width:100%"/>
+				<small class="support text-center">Don't worry, you only need to enter this once and we will remember it for you.</small>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <br clear="all">
+		<br clear="all">
+		<br clear="all">
+		<div class="row mainrow">
+			<p class="text-center"><span id="duration">10 seconds</span></p>
+		</div>
+		<div class="row mainrow">
+			<div class="cont" id="step1">
+				<img id=record src="{% static 'blue.png' %}"/>
+				<div class="centered">Take Attendance</div>
+			</div>
+			<div class="cont" id="step2">
+				<img src="{% static 'pink.png' %}"/>
+				<div class="centered">Recording</div>
+			</div>
+			<div class="cont black" id="step3">
+				<img src="{% static 'white.png' %}"/>
+				<div class="centered">Processing ... <br><small class="text-center" style="font-weight:100;">do not leave this page</small></div>
+			</div>
+			<div class="cont" id="step4">
+				<img src="{% static 'green.png' %}"/>
+				<div class="centered">You're checked in!</div>
+			</div>
+			<div class="cont" id="step5">
+				<img id="rerecord" src="{% static 'orange.png' %}"/>
+				<div class="centered">Check in failed! <br> Try again.</div>
+			</div>
+			<div class="cont report-link" style="margin-top:30px; display:block; width:100%;">
+				<button type="button" class="btn btn-outline-secondary centered" onclick="get_history()">My Attendance History</button>
+			</div>
+		</div>
+
+
+	</div>
+
+		<script src="{% static 'wzrecorder.js' %}"></script>
+		<script>
+			var session = '{{session}}';
+			function set_cookie(name, value) {
+					document.cookie = name + "=" + value + ";"
+			}
+
+			set_cookie('csrftoken', '{{ csrf_token }}')
+
+			function get_history() {
+				window.location.href="/history?id=" + $('#studentID').val()
+			}
+
+			// Actual Upload function using xhr
+			function upload(blob){
+				var csrftoken = getCookie('csrftoken');
+
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', 'student-input', true);
+				var csrftoken = getCookie('csrftoken');
+				xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				xhr.setRequestHeader("STUDENTID", $('#studentID').val());
+				xhr.setRequestHeader("SESSIONNAME", session);
+
+				xhr.upload.onloadend = function() {
+					$('#step2').css('display', 'none')
+					$('#step3').css('display', 'block')
+					$('.report-link').css('display', 'block')
+					console.log("uploaded file")
+				};
+
+				xhr.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						console.log(this.responseText);
+						poll(1)
+					}
+
+				};
+
+				xhr.send(blob);
+
+        	}
+
+			function getCookie(name) {
+				var cookieValue = null;
+				if (document.cookie && document.cookie != '') {
+					var cookies = document.cookie.split(';');
+					for (var i = 0; i < cookies.length; i++) {
+						var cookie = jQuery.trim(cookies[i]);
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) == (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			function initialize() {
+				var fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+				if (!fs) {
+					take_attendance()
+				}
+				fs(window.TEMPORARY, 100, function(fs) {
+					take_attendance()
+				}, function(err) {
+					$('#error').html("Sorry, you cannot use Attendy in incognito mode")
+					$("#error").css("display", "block")
+					$('.mainrow').css('display', 'none')
+				});
+			}
+
+			function take_attendance() {
+				$("#error").css("display", "none")
+				$("#step1").click(function() {
+					record();
+				})
+				$("#step5").click(function() {
+					record();
+				})
+			}
+
+			function record() {
+				if ($("#studentID").val() == "") {
+					$("#error").html("Please enter your StudentID")
+					$("#error").css("display", "block")
+					$(".support").css("display", "block")
+				} else {
+					$("#error").css("display", "none")
+					set_cookie('studentID', $("#studentID").val())
+
+					var t = 10000
+					var recorder = new WzRecorder({
+						onRecordingStop: function(blob) {
+							console.log("stopping listener called")
+							upload(blob)
+						},
+						onRecording: function(milliseconds) {
+							$('#step5').css('display', 'none')
+							$('#step1').css('display', 'none')
+							$('#step2').css('display', 'block')
+							var timeleft = t - milliseconds;
+							document.getElementById("duration").innerHTML = (timeleft/1000).toFixed(0) + " seconds remaining";
+
+							if(milliseconds >= t){
+								document.getElementById("duration").innerHTML = ""
+								$('#step2').css('display', 'none')
+								$('#step3').css('display', 'block')
+								recorder.stop()
+							}
+							console.log("still recording")
+						}
+					});
+					recorder.toggleRecording();
+				}
+			}
+
+			function poll(i) {
+				if (false) {
+					$('#step3').css('display', 'none')
+					$('#step5').css('display', 'block')
+					console.log("Too many polls")
+					return
+				} else {
+					i = i + 1
+				}
+				$.ajax({
+					url: '/poll?id=' + $("#studentID").val() + '&session=' + session,
+					dataType: 'json',
+					error: function(xhr_data) {
+						// terminate the script
+					},
+					success: function(data) {
+						console.log(data);
+						if (data.status == 'pending') {
+							setTimeout(function() { poll(i); }, 10000);
+
+						} else {
+							if (data.status == "P") {
+								$('#step3').css('display', 'none')
+								$('#step4').css('display', 'block')
+								console.log("passed")
+							} else {
+								$('#step3').css('display', 'none')
+								$('#step5').css('display', 'block')
+								console.log("Failed")
+							}
+							$('.report-link').css("display", "block")
+						}
+					},
+					contentType: 'application/json'
+				});
+			}
+
+			function get_or_set_id_cookie() {
+				id_ = getCookie('studentID')
+				if (id_) {
+					console.log("id cookie found")
+					$("#studentID").val(id_)
+				} else {
+					console.log('no id cookie set')
+					set_cookie('studentID', $("#studentID").val())
+				}
+			}
+
+			$( document ).ready(function() {
+				initialize()
+				get_or_set_id_cookie()
+			});
+
+		</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+	<link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
+    <title>Attendy</title>
+</head>
+<body>
+	<div class="container" >
+        <!-- Page Heading -->
+		<h1 class="text-center">Attendy</h1>
+		<h4 class="text-center">Technology Firm Leadership, IEOR 171</h4>
+		<p class="text-center">{{ today|date:"F d, Y" }}</p>
+
+
+        <br clear="all">
+		<br clear="all">
+		<br clear="all">
+		<div class="row">
+			<small class="text-center">Refresh to see up to date data</small>
+		</div>
+		<hr>
+		<div class="row">
+			<h1>Absent Students ({{no_of_absent_students}})</h1>
+		</div>
+		<div class="row">
+			<div class="alert alert-warning text-center" id="error" role="alert"></div>
+		</div>
+		<div class="row">
+			<h3 class="text-center"></h3>
+            <table class="table table-centered table-striped">
+				<thead>
+					<th>Student</th>
+					<th>Status</th>
+					<th>Action</th>
+				</thead>
+				{% for student in absent %}
+					<tr id="a_{{student.id}}">
+						<td>{{student.studentID}}</td>
+						<td>{{student.status}}</td>
+						<td><button attrib='a_{{student.id}}' class="mark-as-present btn btn-outline-secondary">Mark as Present</button></td>
+					</tr>
+				{% endfor %}
+				{% for s in absent_from_list %}
+					<tr id="l_{{s.id}}">
+						<td>{{s.studentID}}</td>
+						<td>Absent</td>
+						<td>
+							<button attrib='l_{{s.id}}' class="mark-as-present btn btn-outline-secondary">Mark as Present</button>
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+        </div>
+
+		<div class="row">
+			<h1>Marked as Suspicious({{no_of_cheaters}})</h1>
+		</div>
+		<div class="row">
+			<h3 class="text-center"></h3>
+            <table class="table table-centered table-striped">
+				<thead>
+					<th></th>
+					<th>Student</th>
+					<th>Status</th>
+					<th>Code</th>
+					<th colspan="2">Action</th>
+				</thead>
+				{% for student in cheaters %}
+					<tr  id="c_{{student.id}}">
+						<td>{{forloop.counter}}.</td>
+						<td>{{student.studentID}}</td>
+						<td>{{student.status}}</td>
+						<td>{{student.code}}</td>
+						<td>
+							<button attrib='c_{{student.id}}' class="mark-as-present btn btn-outline-secondary">Mark as Present</button>
+						</td>
+						<td>
+							<button attrib='c_{{student.id}}' class="mark-as-absent btn btn-outline-secondary">Mark as Absent</button>
+						</td>
+					</tr>
+				{% empty %}
+					<tr>
+						<td colspan="4"> <span class="text-center">No records for today</span></td>
+					</tr>
+				{% endfor %}
+			</table>
+        </div>
+    </div>
+	<script>
+		$(document).ready(function() {
+			$('.mark-as-present').click(function() {
+				console.log($(this).attr('attrib'))
+				$.ajax({
+					url: '/mark-as-present?id=' + $(this).attr('attrib'),
+					dataType: 'json',
+					error: function(data) {
+						// terminate the script
+					},
+					success: function(data) {
+						console.log(data);
+						if (data.status) {
+							$('#' + data.id).css('display', 'none')
+						} else {
+							$('.error').html("Something went wrong, please try again")
+							$('.error').css('display', 'block')
+						}
+					},
+					contentType: 'application/json'
+				});
+			});
+			$('.mark-as-absent').click(function() {
+				console.log($(this).attr('attrib'))
+				$.ajax({
+					url: '/mark-as-absent?id=' + $(this).attr('attrib'),
+					dataType: 'json',
+					error: function(data) {
+						// terminate the script
+					},
+					success: function(data) {
+						console.log(data);
+						if (data.status) {
+							$('#' + data.id).css('display', 'none')
+						} else {
+							$('.error').html("Something went wrong, please try again")
+							$('.error').css('display', 'block')
+						}
+					},
+					contentType: 'application/json'
+				});
+			});
+		});
+	</script>
+</body>
+</html>

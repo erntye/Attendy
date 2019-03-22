@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
+    <title>Attendy</title>
+</head>
+<body>
+	<div class="container" >
+
+		<!-- Page Heading -->
+		<h1 class="text-center">Attendy</h1>
+		<h4 class="text-center">Technology Firm Leadership, IEOR 171</h4>
+		<p class="text-center">{{ today|date:"F d, Y" }}</p>
+
+        <hr>
+
+        <h1 class="text-center">
+            You cannot load this page on your desktop. Please use a Chrome or Safari browser on your phone to take attendance.
+        </h1>
+        <p class="text-center">
+            Mobile: {{is_mobile}}
+        </p>
+
+        <br clear="all">
+        <br clear="all">
+        <br clear="all">
+        <div class="cont">
+            <img src="{% static 'sorry.jpg'%}" style="height:150px;" class="centered">
+        </div>
+
+        <br clear="all">
+
+    </div>
+</body>
+</html>

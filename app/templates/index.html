@@ -1,0 +1,195 @@
+﻿{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<!--<script src="{% static 'reconnecting-websocket.min.js' %}"></script>-->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+	<link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
+    <title>Attendy</title>
+</head>
+<body>
+	<div class="container" >
+
+		<!-- Page Heading -->
+		<h1 class="text-center">Attendy</h1>
+		<h4 class="text-center">Technology Firm Leadership, IEOR 171</h4>
+		<p class="text-center">{{ today|date:"F d, Y" }}</p>
+
+		<br clear="all">
+		<br clear="all">
+		<br clear="all">
+		<div class="row">
+			<div class="alert alert-warning text-center" id="error" role="alert"></div>
+		</div>
+		<div class="row">
+			<p class="text-center"><span id="duration"></span></p>
+		</div>
+		<div class="row">
+			<div class="cont" id="step1">
+				<img id=record src="{% static 'blue.png' %}"/>
+				<div class="centered">Take Attendance</div>
+			</div>
+			<div class="cont" id="step2">
+				<img src="{% static 'pink.png' %}"/>
+				<div class="centered">Recording</div>
+			</div>
+			<div class="cont black" id="step3">
+				<img src="{% static 'white.png' %}"/>
+				<div class="centered">Processing ...</div>
+			</div>
+			<div class="cont" id="step4">
+				<img src="{% static 'green.png' %}"/>
+				<div class="centered">Done!</div>
+				<br clear="all">
+			</div>
+			<div class="row cont report-link" style="margin-top:40px;">
+				<button type="button" class="btn btn-outline-secondary centered" onclick="window.location.href='/report'">Today's Attendance Report</button>
+			</div>
+		</div>
+
+	</div>
+
+		<script src="{% static 'wzrecorder.js' %}"></script>
+		<script>
+			var session = '{{session}}';
+			var TIMES = 4
+			var LENGTH = 10000
+			var OFFSET = 5000
+			function set_cookie(name, value) {
+				document.cookie = name + "=" + value + ";"
+			}
+
+			function start_timer() {
+				u = (OFFSET * (TIMES + 2)) /1000;
+				countdown(u)
+			}
+			function countdown(seconds) {
+				var u = seconds;
+				var downloadTimer = setInterval(function(){
+					$("#duration").html(u + " seconds remaining");
+					u -= 1;
+					if(u <= 0)
+						clearInterval(downloadTimer);
+				}, 1000);
+			}
+
+
+			set_cookie('csrftoken', '{{ csrf_token }}')
+
+			function take_attendance_1() {
+				t = 10000
+				var called = false;
+
+				$('#step1').css('display', 'none')
+				$('#step2').css('display', 'block')
+
+				var recorder = new WzRecorder({
+					onRecordingStop: function(blob) {
+						console.log("First recorder done")
+						upload(blob, TIMES, false)
+						TIMES = TIMES -1
+					},
+					onRecording: function(milliseconds) {
+						if (milliseconds >= OFFSET && called != true) {
+							console.log("calling new recorder")
+							if (TIMES == 1) {
+								take_attendance_final()
+							} else {
+								take_attendance_1()
+							}
+							called = true
+						}
+
+						if (milliseconds >= t){
+							recorder.stop()
+						}
+						console.log("recorder recording")
+					}
+				});
+
+				recorder.start();
+			}
+
+			function take_attendance_final() {
+				t = LENGTH
+				var recorder_final = new WzRecorder({
+					onRecordingStop: function(blob) {
+						console.log("final recorder done")
+						upload(blob, TIMES, true)
+					},
+					onRecording: function(milliseconds) {
+						if(milliseconds >= t){
+							recorder_final.stop()
+						}
+
+						console.log("recorder_final  recording")
+					}
+				});
+				recorder_final.start()
+			}
+
+			function upload(blob, version, end){
+				var csrftoken = getCookie('csrftoken');
+
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', 'instructor-input', true);
+				xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				xhr.setRequestHeader("USERID", "{{user_id}}");
+				xhr.setRequestHeader("CLASSID", "{{class_id}}");
+				xhr.setRequestHeader("SESSIONNAME", session);
+				xhr.setRequestHeader("VERSIONNAME", version);
+
+				xhr.upload.onloadend = function() {
+					console.log("upload ended")
+				};
+				xhr.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						console.log(this.responseText);
+						if (end) {
+							$('#step2').css('display', 'none')
+							$('#step3').css('display', 'none')
+							$('#step4').css('display', 'block')
+							$('.report-link').css("display", "block")
+						}
+					} else if(this.status != 200){
+						$('#error').html("Something went wrong, please reload and try again")
+						$('#error').css('display', 'block')
+					}
+
+				};
+
+
+				xhr.send(blob);
+        	}
+
+			function getCookie(name) {
+				var cookieValue = null;
+				if (document.cookie && document.cookie != '') {
+					var cookies = document.cookie.split(';');
+					for (var i = 0; i < cookies.length; i++) {
+						var cookie = jQuery.trim(cookies[i]);
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) == (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			$( document ).ready(function() {
+
+				$('#record').click(function() {
+					take_attendance_1()
+					start_timer()
+				});
+			});
+
+		</script>
+</body>
+</html>
